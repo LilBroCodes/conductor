@@ -13,7 +13,7 @@ import java.nio.file.StandardOpenOption;
 @SuppressWarnings({"CallToPrintStackTrace", "unused"})
 public class ConfigUtils {
     public static Gson GSON = new GsonBuilder().serializeNulls().disableHtmlEscaping().setPrettyPrinting().create();
-    public static Logger LOGGER = LogManager.getLogger("Platinum Config Handler");
+    public static Logger LOGGER = LogManager.getLogger("Config Handler");
 
     public static <T> T getConfigObject(Class<T> configClass) {
         T object = null;

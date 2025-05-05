@@ -6,7 +6,6 @@ import org.lilbrocodes.commander.api.executor.CommandGroupNode;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.function.Function;
 
 public class ConfigGenerator {
 
@@ -16,26 +15,26 @@ public class ConfigGenerator {
      * @param instance                The config instance with public/private fields to expose as editable.
      * @param saveCallback            Runnable to call when the "save" subcommand is executed.
      * @param loadCallback            Runnable to call when the "load" subcommand is executed.
-     * @param messagePrefixProvider   Function that takes a context string and returns a formatted plugin prefix.
+     * @param pluginName              Formatted plugin name that is used for messsages
      * @return A CommandGroupNode with `edit`, `save`, and `load` subcommands.
      */
     public static CommandGroupNode generateConfigCommand(
             Object instance,
             Runnable saveCallback,
             Runnable loadCallback,
-            Function<String, String> messagePrefixProvider
+            String pluginName
     ) {
         CommandGroupNode root = new CommandGroupNode(
                 "config",
                 "Configuration command",
-                messagePrefixProvider.apply("")
+                pluginName
         );
 
         Class<?> clazz = instance.getClass();
         CommandGroupNode edit = new CommandGroupNode(
                 "edit",
                 "Edit configuration",
-                messagePrefixProvider.apply("Config")
+                prefixText("Config", pluginName)
         );
 
         for (Field field : clazz.getDeclaredFields()) {
@@ -49,7 +48,8 @@ public class ConfigGenerator {
                 ConfigValueCommand<?> command = new ConfigValueCommand<>(
                         field.getName(),
                         type,
-                        value
+                        value,
+                        pluginName
                 );
 
                 command.addPostSetTrigger(newValue -> {
@@ -67,22 +67,22 @@ public class ConfigGenerator {
         CommandActionNode save = new CommandActionNode(
                 "save",
                 "Saves the configuration",
-                messagePrefixProvider.apply("Config"),
+                prefixText("Config", pluginName),
                 List.of(),
                 (sender, args) -> {
                     saveCallback.run();
-                    sender.sendMessage(messagePrefixProvider.apply("Config saved successfully."));
+                    sender.sendMessage(prefixMessage("Config saved successfully.", pluginName));
                 }
         );
 
         CommandActionNode load = new CommandActionNode(
                 "load",
                 "Loads the configuration",
-                messagePrefixProvider.apply("Config"),
+                prefixText("Config", pluginName),
                 List.of(),
                 (sender, args) -> {
                     loadCallback.run();
-                    sender.sendMessage(messagePrefixProvider.apply("Config loaded successfully."));
+                    sender.sendMessage(prefixMessage("Config loaded successfully.", pluginName));
                 }
         );
 
@@ -106,5 +106,13 @@ public class ConfigGenerator {
         if (type == double.class || type == Double.class) return ParameterType.DOUBLE;
         if (type == float.class || type == Float.class) return ParameterType.FLOAT;
         return null; // unsupported type
+    }
+
+    public static String prefixText(String text, String pluginName) {
+        return String.format("%s %s", pluginName, text);
+    }
+
+    public static String prefixMessage(String message, String pluginName) {
+        return String.format("§r§7[§r%s§r§7]§r %s", pluginName, message);
     }
 }
